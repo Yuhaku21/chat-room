@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bluetooth Chat Room</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 10px;
+      }
+
+      .app-container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 420px;
+        height: 90vh;
+        max-height: 750px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        text-align: center;
+        position: relative;
+      }
+
+      .header h1 {
+        font-size: 1.5em;
+        margin-bottom: 8px;
+      }
+
+      .user-profile {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2em;
+      }
+
+      .username {
+        font-weight: 600;
+        font-size: 1.1em;
+      }
+
+      .status {
+        font-size: 0.9em;
+        opacity: 0.9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .status-indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #ff4757;
+        animation: pulse 2s infinite;
+      }
+
+      .status-indicator.online {
+        background: #2ed573;
+      }
+
+      .status-indicator.scanning {
+        background: #ffa502;
+      }
+
+      @keyframes pulse {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+
+      .tabs {
+        background: #f8f9fa;
+        display: flex;
+        border-bottom: 1px solid #e9ecef;
+      }
+
+      .tab {
+        flex: 1;
+        padding: 15px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9em;
+        font-weight: 500;
+        color: #6c757d;
+        transition: all 0.3s ease;
+        position: relative;
+      }
+
+      .tab.active {
+        color: #667eea;
+        background: white;
+      }
+
+      .tab.active::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      .tab-content {
+        display: none;
+        flex: 1;
+        flex-direction: column;
+      }
+
+      .tab-content.active {
+        display: flex;
+      }
+
+      .friends-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 15px;
+      }
+
+      .search-container {
+        padding: 15px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+      }
+
+      .search-btn {
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1em;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .search-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .search-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .scanning-animation {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top: 2px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .friend-item {
+        background: white;
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .friend-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      }
+
+      .friend-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2em;
+        font-weight: 600;
+      }
+
+      .friend-info {
+        flex: 1;
+      }
+
+      .friend-name {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 4px;
+      }
+
+      .friend-status {
+        font-size: 0.8em;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .friend-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .connect-btn {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.8em;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .connect-btn:hover {
+        background: #218838;
+      }
+
+      .connect-btn:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+      }
+
+      .messages-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 15px;
+        background: #f8f9fa;
+      }
+
+      .message {
+        margin-bottom: 15px;
+        animation: fadeIn 0.3s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .message.sent {
+        text-align: right;
+      }
+
+      .message.received {
+        text-align: left;
+      }
+
+      .message-bubble {
+        display: inline-block;
+        padding: 12px 16px;
+        border-radius: 18px;
+        max-width: 80%;
+        word-wrap: break-word;
+        position: relative;
+      }
+
+      .message.sent .message-bubble {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .message.received .message-bubble {
+        background: white;
+        color: #333;
+        border: 1px solid #e9ecef;
+      }
+
+      .message-info {
+        font-size: 0.75em;
+        opacity: 0.7;
+        margin-top: 5px;
+      }
+
+      .input-area {
+        padding: 15px;
+        background: white;
+        border-top: 1px solid #e9ecef;
+        display: flex;
+        gap: 10px;
+      }
+
+      .message-input {
+        flex: 1;
+        padding: 12px 16px;
+        border: 2px solid #e9ecef;
+        border-radius: 25px;
+        outline: none;
+        font-size: 1em;
+        transition: border-color 0.3s ease;
+      }
+
+      .message-input:focus {
+        border-color: #667eea;
+      }
+
+      .send-button {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        border: none;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        font-size: 1.2em;
+      }
+
+      .send-button:hover {
+        transform: scale(1.1);
+      }
+
+      .send-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #6c757d;
+      }
+
+      .empty-state h3 {
+        margin-bottom: 10px;
+        color: #495057;
+      }
+
+      .empty-state p {
+        font-size: 0.9em;
+        line-height: 1.5;
+      }
+
+      .notification {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        border-radius: 8px;
+        padding: 12px;
+        margin: 10px 15px;
+        color: #155724;
+        font-size: 0.9em;
+        animation: slideDown 0.3s ease;
+      }
+
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .notification.error {
+        background: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+      }
+
+      .notification.info {
+        background: #d1ecf1;
+        border-color: #bee5eb;
+        color: #0c5460;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        animation: fadeIn 0.3s ease;
+      }
+
+      .modal-content {
+        background: white;
+        width: 90%;
+        max-width: 350px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border-radius: 15px;
+        padding: 25px;
+        text-align: center;
+      }
+
+      .modal-content h3 {
+        margin-bottom: 15px;
+        color: #333;
+      }
+
+      .modal-content input {
+        width: 100%;
+        padding: 12px;
+        margin: 10px 0;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1em;
+        outline: none;
+      }
+
+      .modal-content input:focus {
+        border-color: #667eea;
+      }
+
+      .modal-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      .modal-btn {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1em;
+        transition: all 0.3s ease;
+      }
+
+      .modal-btn.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .modal-btn.secondary {
+        background: #6c757d;
+        color: white;
+      }
+
+      @media (max-width: 480px) {
+        .app-container {
+          height: 100vh;
+          border-radius: 0;
+          max-height: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-container">
+      <div class="header">
+        <h1>📱 Bluetooth Chat Room</h1>
+        <div class="user-profile">
+          <div class="avatar" id="userAvatar">👤</div>
+          <div class="username" id="userName">User</div>
+        </div>
+        <div class="status">
+          <div class="status-indicator" id="statusIndicator"></div>
+          <span id="statusText">Offline</span>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="friends">👥 Cari Teman</button>
+        <button class="tab" data-tab="chat">💬 Chat</button>
+      </div>
+
+      <div class="tab-content active" id="friends-tab">
+        <div class="search-container">
+          <button class="search-btn" id="searchBtn">
+            <span id="searchIcon">🔍</span>
+            <span id="searchText">Cari Perangkat Bluetooth</span>
+          </button>
+        </div>
+        <div class="friends-list" id="friendsList">
+          <div class="empty-state">
+            <h3>🔍 Temukan Teman Baru</h3>
+            <p>Tekan tombol "Cari Perangkat Bluetooth" untuk menemukan teman-teman di sekitar Anda yang juga menggunakan aplikasi ini.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="chat-tab">
+        <div class="messages-container" id="messagesContainer">
+          <div class="empty-state">
+            <h3>💬 Belum Ada Percakapan</h3>
+            <p>Hubungkan dengan teman terlebih dahulu untuk mulai chat. Kembali ke tab "Cari Teman" untuk menemukan perangkat di sekitar.</p>
+          </div>
+        </div>
+        <div class="input-area">
+          <input type="text" class="message-input" id="messageInput" placeholder="Ketik pesan..." disabled />
+          <button class="send-button" id="sendButton" disabled>📤</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Setup Profile -->
+    <div class="modal" id="profileModal">
+      <div class="modal-content">
+        <h3>🎯 Setup Profil</h3>
+        <p>Masukkan nama Anda untuk memulai:</p>
+        <input type="text" id="profileName" placeholder="Nama Anda" maxlength="20" />
+        <div class="modal-buttons">
+          <button class="modal-btn primary" id="saveProfile">Mulai Chat</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // WebSocket URL kamu, ganti dengan server WebSocket yang kamu host (contoh di Railway atau VPS)
+      const WEBSOCKET_URL = "wss://your-websocket-server-url.com";
+      class BluetoothChatRoom {
+        constructor() {
+          this.userName = "";
+          this.connectedFriends = new Map();
+          this.discoveredDevices = new Map();
+          this.isScanning = false;
+          this.currentChatPartner = null;
+          this.messageHistory = new Map();
+
+          // Bluetooth Service UUIDs
+          this.SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+          this.TX_CHAR_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
+          this.RX_CHAR_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
+
+          this.initializeApp();
+        }
+
+        initializeApp() {
+          this.initElements();
+          this.setupEventListeners();
+          this.checkBluetoothSupport();
+          this.showProfileModal();
+          this.initWebSocket();
+        }
+        initWebSocket() {
+          this.socket = new WebSocket(WEBSOCKET_URL);
+
+          this.socket.addEventListener("open", () => {
+            console.log("WebSocket connected");
+          });
+
+          this.socket.addEventListener("message", (event) => {
+            try {
+              const data = JSON.parse(event.data);
+              if (data.sender !== this.userName) {
+                this.addMessage(data.content, "received", data.sender, data.timestamp);
+              }
+            } catch (e) {
+              console.error("Invalid WebSocket message", e);
+            }
+          });
+
+          this.socket.addEventListener("close", () => {
+            console.log("WebSocket disconnected");
+          });
+        }
+        initElements() {
+          this.elements = {
+            userAvatar: document.getElementById("userAvatar"),
+            userName: document.getElementById("userName"),
+            statusIndicator: document.getElementById("statusIndicator"),
+            statusText: document.getElementById("statusText"),
+            searchBtn: document.getElementById("searchBtn"),
+            searchIcon: document.getElementById("searchIcon"),
+            searchText: document.getElementById("searchText"),
+            friendsList: document.getElementById("friendsList"),
+            messagesContainer: document.getElementById("messagesContainer"),
+            messageInput: document.getElementById("messageInput"),
+            sendButton: document.getElementById("sendButton"),
+            profileModal: document.getElementById("profileModal"),
+            profileName: document.getElementById("profileName"),
+            saveProfile: document.getElementById("saveProfile"),
+          };
+
+          // Tab functionality
+          this.setupTabs();
+        }
+
+        setupTabs() {
+          const tabs = document.querySelectorAll(".tab");
+          const tabContents = document.querySelectorAll(".tab-content");
+
+          tabs.forEach((tab) => {
+            tab.addEventListener("click", () => {
+              // Remove active class from all tabs and contents
+              tabs.forEach((t) => t.classList.remove("active"));
+              tabContents.forEach((content) => content.classList.remove("active"));
+
+              // Add active class to clicked tab
+              tab.classList.add("active");
+
+              // Show corresponding content
+              const targetTab = tab.getAttribute("data-tab");
+              document.getElementById(targetTab + "-tab").classList.add("active");
+            });
+          });
+        }
+
+        setupEventListeners() {
+          this.elements.searchBtn.addEventListener("click", () => this.searchForFriends());
+          this.elements.sendButton.addEventListener("click", () => this.sendMessage());
+          this.elements.messageInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") this.sendMessage();
+          });
+          this.elements.saveProfile.addEventListener("click", () => this.saveProfile());
+          this.elements.profileName.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") this.saveProfile();
+          });
+        }
+
+        checkBluetoothSupport() {
+          if (!navigator.bluetooth) {
+            this.showNotification("Bluetooth tidak didukung di browser ini. Gunakan Chrome atau Edge.", "error");
+            return false;
+          }
+          return true;
+        }
+
+        showProfileModal() {
+          this.elements.profileModal.style.display = "block";
+          this.elements.profileName.focus();
+        }
+
+        saveProfile() {
+          const name = this.elements.profileName.value.trim();
+          if (!name) {
+            this.elements.profileName.focus();
+            return;
+          }
+
+          this.userName = name;
+          this.elements.userName.textContent = name;
+          this.elements.userAvatar.textContent = name.charAt(0).toUpperCase();
+          this.elements.profileModal.style.display = "none";
+
+          this.showNotification(`Selamat datang, ${name}! Mulai cari teman untuk chat.`, "info");
+          this.updateStatus("offline", "Siap untuk terhubung");
+        }
+
+        updateStatus(status, text) {
+          this.elements.statusIndicator.className = `status-indicator ${status}`;
+          this.elements.statusText.textContent = text;
+        }
+
+        showNotification(message, type = "info") {
+          const notification = document.createElement("div");
+          notification.className = `notification ${type}`;
+          notification.textContent = message;
+
+          document.body.appendChild(notification);
+
+          setTimeout(() => {
+            notification.remove();
+          }, 5000);
+        }
+
+        async searchForFriends() {
+          if (!this.checkBluetoothSupport()) return;
+
+          if (this.isScanning) {
+            this.stopScanning();
+            return;
+          }
+
+          this.startScanning();
+
+          try {
+            const device = await navigator.bluetooth.requestDevice({
+              acceptAllDevices: true,
+              optionalServices: [this.SERVICE_UUID, "generic_access", "device_information"],
+            });
+
+            await this.addDiscoveredDevice(device);
+          } catch (error) {
+            console.error("Error searching for devices:", error);
+            this.showNotification("Gagal mencari perangkat: " + error.message, "error");
+          } finally {
+            this.stopScanning();
+          }
+        }
+
+        startScanning() {
+          this.isScanning = true;
+          this.updateStatus("scanning", "Mencari perangkat...");
+          this.elements.searchIcon.innerHTML = '<div class="scanning-animation"></div>';
+          this.elements.searchText.textContent = "Menghentikan Pencarian...";
+          this.elements.searchBtn.classList.add("scanning");
+
+          // Clear previous results
+          this.clearFriendsList();
+          this.showNotification("Mencari perangkat Bluetooth di sekitar...", "info");
+        }
+
+        stopScanning() {
+          this.isScanning = false;
+          this.updateStatus("offline", "Siap untuk terhubung");
+          this.elements.searchIcon.textContent = "🔍";
+          this.elements.searchText.textContent = "Cari Perangkat Bluetooth";
+          this.elements.searchBtn.classList.remove("scanning");
+        }
+
+        clearFriendsList() {
+          this.elements.friendsList.innerHTML = "";
+        }
+
+        async addDiscoveredDevice(device) {
+          if (this.discoveredDevices.has(device.id)) return;
+
+          this.discoveredDevices.set(device.id, device);
+
+          const friendItem = this.createFriendItem(device);
+          this.elements.friendsList.appendChild(friendItem);
+
+          this.showNotification(`Perangkat ditemukan: ${device.name || "Unknown Device"}`, "info");
+        }
+
+        createFriendItem(device) {
+          const item = document.createElement("div");
+          item.className = "friend-item";
+          item.innerHTML = `
+                    <div class="friend-avatar">${this.getDeviceIcon(device)}</div>
+                    <div class="friend-info">
+                        <div class="friend-name">${device.name || "Unknown Device"}</div>
+                        <div class="friend-status">
+                            <span>📡 Terdeteksi</span>
+                            <span style="margin-left: 10px;">📶 Siap terhubung</span>
+                        </div>
+                    </div>
+                    <div class="friend-actions">
+                        <button class="connect-btn" onclick="app.connectToFriend('${device.id}')">
+                            Hubungkan
+                        </button>
+                    </div>
+                `;
+          return item;
+        }
+
+        getDeviceIcon(device) {
+          const name = (device.name || "").toLowerCase();
+          if (name.includes("phone")) return "📱";
+          if (name.includes("laptop") || name.includes("computer")) return "💻";
+          if (name.includes("tablet")) return "📱";
+          if (name.includes("watch")) return "⌚";
+          return "📟";
+        }
+
+        async connectToFriend(deviceId) {
+          const device = this.discoveredDevices.get(deviceId);
+          if (!device) return;
+
+          try {
+            this.updateStatus("scanning", "Menghubungkan...");
+            this.showNotification(`Menghubungkan ke ${device.name || "perangkat"}...`, "info");
+
+            const server = await device.gatt.connect();
+            let service, rxChar, txChar;
+
+            try {
+              service = await server.getPrimaryService(this.SERVICE_UUID);
+              rxChar = await service.getCharacteristic(this.RX_CHAR_UUID);
+              txChar = await service.getCharacteristic(this.TX_CHAR_UUID);
+            } catch (serviceError) {
+              // Fallback untuk perangkat yang tidak mendukung custom service
+              const services = await server.getPrimaryServices();
+              service = services[0];
+              const characteristics = await service.getCharacteristics();
+              rxChar = characteristics[0];
+              txChar = characteristics[0];
+            }
+
+            // Setup message listener
+            await rxChar.startNotifications();
+            rxChar.addEventListener("characteristicvaluechanged", (event) => {
+              this.handleIncomingMessage(event, device);
+            });
+
+            // Store connection
+            this.connectedFriends.set(deviceId, {
+              device,
+              server,
+              service,
+              rxChar,
+              txChar,
+              name: device.name || "Unknown Friend",
+            });
+
+            this.currentChatPartner = deviceId;
+            this.updateStatus("online", `Terhubung ke ${device.name || "Teman"}`);
+            this.showNotification(`Berhasil terhubung dengan ${device.name || "teman"}!`, "success");
+
+            // Enable chat
+            this.enableChat();
+
+            // Switch to chat tab
+            this.switchToChatTab();
+
+            // Send connection message
+            await this.sendConnectionMessage();
+          } catch (error) {
+            console.error("Connection error:", error);
+            this.showNotification("Gagal terhubung: " + error.message, "error");
+            this.updateStatus("offline", "Siap untuk terhubung");
+          }
+        }
+
+        switchToChatTab() {
+          document.querySelectorAll(".tab").forEach((tab) => tab.classList.remove("active"));
+          document.querySelectorAll(".tab-content").forEach((content) => content.classList.remove("active"));
+
+          document.querySelector('[data-tab="chat"]').classList.add("active");
+          document.getElementById("chat-tab").classList.add("active");
+
+          // Clear empty state
+          this.elements.messagesContainer.innerHTML = "";
+        }
+
+        enableChat() {
+          this.elements.messageInput.disabled = false;
+          this.elements.sendButton.disabled = false;
+          this.elements.messageInput.placeholder = "Ketik pesan...";
+        }
+
+        async sendConnectionMessage() {
+          const message = {
+            type: "connection",
+            sender: this.userName,
+            content: `${this.userName} telah terhubung`,
+            timestamp: Date.now(),
+          };
+
+          await this.broadcastMessage(message);
+          this.addMessage("Anda telah terhubung", "system");
+        }
+
+        handleIncomingMessage(event, senderDevice) {
+          try {
+            const value = new TextDecoder().decode(event.target.value);
+            const messageData = JSON.parse(value);
+
+            switch (messageData.type) {
+              case "connection":
+                this.addMessage(`${messageData.sender} telah terhubung`, "system");
+                break;
+              case "message":
+                this.addMessage(messageData.content, "received", messageData.sender, messageData.timestamp);
+                break;
+              case "disconnect":
+                this.addMessage(`${messageData.sender} telah terputus`, "system");
+                break;
+            }
+          } catch (error) {
+            console.error("Error parsing message:", error);
+          }
+        }
+
+        async sendMessage() {
+          const content = this.elements.messageInput.value.trim();
+          if (!content || this.connectedFriends.size === 0) return;
+
+          const message = {
+            type: "message",
+            sender: this.userName,
+            content: content,
+            timestamp: Date.now(),
+          };
+
+          try {
+            await this.broadcastMessage(message);
+            if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+              this.socket.send(JSON.stringify(message));
+            }
+            await this.broadcastMessage(message);
+            this.addMessage(content, "sent", this.userName, message.timestamp);
+            this.elements.messageInput.value = "";
+          } catch (error) {
+            this.showNotification("Gagal mengirim pesan: " + error.message, "error");
+          }
+        }
+
+        async broadcastMessage(message) {
+          const encoder = new TextEncoder();
+          const data = encoder.encode(JSON.stringify(message));
+
+          for (const [deviceId, connection] of this.connectedFriends) {
+            try {
+              await connection.txChar.writeValue(data);
+            } catch (error) {
+              console.error(`Failed to send to ${deviceId}:`, error);
+              this.connectedFriends.delete(deviceId);
+              this.showNotification(`Koneksi ke ${connection.name} terputus`, "error");
+            }
+          }
+        }
+
+        addMessage(content, type, sender = "", timestamp = Date.now()) {
+          const messageDiv = document.createElement("div");
+          messageDiv.className = `message ${type}`;
+
+          const time = new Date(timestamp).toLocaleTimeString("id-ID", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+
+          if (type === "system") {
+            messageDiv.innerHTML = `
+                        <div class="message-bubble" style="background: #e9ecef; color: #6c757d; border-radius: 10px; font-style: italic;                        text-align: center;">
+                            ${content}
+                        </div>
+                    `;
+          } else {
+            messageDiv.innerHTML = `
+                        <div class="message-bubble">
+                            ${content}
+                        </div>
+                        <div class="message-info">${sender} • ${time}</div>
+                    `;
+          }
+
+          this.elements.messagesContainer.appendChild(messageDiv);
+          this.elements.messagesContainer.scrollTop = this.elements.messagesContainer.scrollHeight;
+        }
+
+        async disconnect() {
+          for (const [deviceId, connection] of this.connectedFriends) {
+            try {
+              const message = {
+                type: "disconnect",
+                sender: this.userName,
+                content: `${this.userName} telah memutuskan koneksi.`,
+                timestamp: Date.now(),
+              };
+              await this.broadcastMessage(message);
+              if (connection.server.connected) {
+                await connection.server.disconnect();
+              }
+            } catch (e) {
+              console.warn(`Gagal memutus koneksi ${deviceId}`, e);
+            }
+          }
+
+          this.connectedFriends.clear();
+          this.currentChatPartner = null;
+          this.updateStatus("offline", "Koneksi terputus");
+          this.showNotification("Semua koneksi telah diputus", "info");
+          this.disableChat();
+        }
+
+        disableChat() {
+          this.elements.messageInput.disabled = true;
+          this.elements.sendButton.disabled = true;
+          this.elements.messageInput.placeholder = "Tidak terhubung";
+          this.elements.messagesContainer.innerHTML = `
+                    <div class="empty-state">
+                        <h3>💬 Belum Ada Percakapan</h3>
+                        <p>Hubungkan dengan teman terlebih dahulu untuk mulai chat. Kembali ke tab "Cari Teman" untuk menemukan perangkat di sekitar.</p>
+                    </div>
+                `;
+        }
+      }
+
+      // Inisialisasi Aplikasi
+      const app = new BluetoothChatRoom();
+
+      window.addEventListener("beforeunload", () => {
+        app.disconnect();
+      });
+    </script>
+  </body>
+</html>
