@@ -1,48 +1,37 @@
 // server.js
+const express = require("express");
+const http = require("http");
 const WebSocket = require("ws");
-const server = new WebSocket.Server({ port: 3000 });
 
-let clients = [];
+const PORT = process.env.PORT || 3000;
+const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
 
-server.on("connection", (ws) => {
-  let userName = "";
+wss.on("connection", (ws) => {
+  console.log("Client connected");
 
   ws.on("message", (message) => {
-    const data = JSON.parse(message);
-
-    if (data.type === "join") {
-      userName = data.name;
-      clients.push({ ws, name: userName });
-
-      broadcast({
-        type: "user_joined",
-        name: userName,
-      });
-    }
-
-    if (data.type === "message") {
-      broadcast({
-        type: "message",
-        name: userName,
-        content: data.content,
-        timestamp: Date.now(),
-      });
-    }
+    console.log("Received:", message);
+    // Broadcast to all clients
+    wss.clients.forEach((client) => {
+      if (client !== ws && client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
+    });
   });
 
   ws.on("close", () => {
-    clients = clients.filter((client) => client.ws !== ws);
-    broadcast({
-      type: "user_left",
-      name: userName,
-    });
+    console.log("Client disconnected");
   });
 });
 
-function broadcast(data) {
-  clients.forEach((client) => {
-    client.ws.send(JSON.stringify(data));
-  });
-}
+// Test route
+app.get("/", (req, res) => {
+  res.send("WebSocket server is running");
+});
 
-console.log("WebSocket server running on ws://localhost:3000");
+// Start server
+server.listen(PORT, () => {
+  console.log(`✅ WebSocket server running on ws://localhost:${PORT}`);
+});
